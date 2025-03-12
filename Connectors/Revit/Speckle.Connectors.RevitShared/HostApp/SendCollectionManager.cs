@@ -32,6 +32,8 @@ public class SendCollectionManager
   {
     var doc = _converterSettings.Current.Document;
     var path = new List<string>();
+
+    // get model name (filename without extension) as the first level in the hierarchy
     string fileName = Path.GetFileNameWithoutExtension(doc.PathName);
     path.Add(fileName);
 
@@ -77,7 +79,7 @@ public class SendCollectionManager
       path.Add("No type");
     }
 
-    string fullPathName = string.Concat(path);
+    string fullPathName = string.Join(":", path);
     if (_collectionCache.TryGetValue(fullPathName, out Collection? value))
     {
       return value;
@@ -89,7 +91,7 @@ public class SendCollectionManager
     for (int i = 0; i < path.Count; i++)
     {
       var pathItem = path[i];
-      flatPathName += pathItem;
+      flatPathName = string.IsNullOrEmpty(flatPathName) ? pathItem : flatPathName + ":" + pathItem;
       Collection childCollection;
       if (_collectionCache.TryGetValue(flatPathName, out Collection? collection))
       {
@@ -98,9 +100,8 @@ public class SendCollectionManager
       else
       {
         childCollection = new Collection(pathItem);
-        // add props if it's the 1st path item, representing level
-        // if the structure ever changes from level > category > type, this needs to be changed
-        if (i == 0 && levelProperties.Count > 0)
+        // add props if it's the 2nd path item (index 1), representing level
+        if (i == 1 && levelProperties.Count > 0)
         {
           childCollection["properties"] = levelProperties;
         }
